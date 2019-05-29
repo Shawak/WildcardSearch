@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WildcardSearch
 // @namespace    WildcardSearch
-// @version      0.0.2
+// @version      0.0.3
 // @description  Search plugin for the project ascension talent builder
 // @author       Shawak
 // @match        *://project-ascension.com/development/builds
@@ -60,6 +60,12 @@ var plguinHtml = `
 </li>
 `;
 
+String.prototype.stripHtml = function () {
+    var div = document.createElement("div");
+    div.innerHTML = this;
+    return div.textContent || div.innerText || "";
+};
+
 var cache = {};
 function loadCache() { cache = GM_getValue("cache", {}); }
 function saveCache() { GM_setValue("cache", cache); }
@@ -106,12 +112,8 @@ function main() {
 }
 
 var search = "";
-var highlightedIds = [];
-var highlightedIndexes = [];
 
 function onSearch(e) {
-    highlightedIds = [];
-    highlightedIndexes = [];
     search = $(this).val().toLowerCase();
     highlight();
 }
@@ -124,9 +126,11 @@ function highlight() {
         return;
     }
 
+    var highlightedIds = [];
+    var highlightedIndexes = [];
     $.each(cache, function(k, v) {
-        if (v.info.name.toLowerCase().includes(search)
-            || v.info.tooltip.text.toLowerCase().includes(search))
+        if (v.info.name.stripHtml().toLowerCase().includes(search)
+            || v.info.tooltip.text.stripHtml().toLowerCase().includes(search))
         {
             if (!highlightedIndexes.includes(v.index)) {
                 highlightedIndexes.push(v.index);
