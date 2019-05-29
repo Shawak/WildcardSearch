@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WildcardSearch
 // @namespace    WildcardSearch
-// @version      0.0.1
+// @version      0.0.2
 // @description  Search plugin for the project ascension talent builder
 // @author       Shawak
 // @match        *://project-ascension.com/development/builds
@@ -27,8 +27,7 @@ GM_addStyle(`
   border: 3px solid yellow;
   border-style: dashed;
   border-radius: 3px;
-  margin-left: -3px;
-  margin-top: -3px;
+  margin: -3px;
 }
 
 .highlighted-classtab {
@@ -106,16 +105,22 @@ function main() {
     update();
 }
 
+var search = "";
 var highlightedIds = [];
 var highlightedIndexes = [];
 
 function onSearch(e) {
     highlightedIds = [];
     highlightedIndexes = [];
+    search = $(this).val().toLowerCase();
+    highlight();
+}
 
-    var search = $(this).val().toLowerCase();
+function highlight() {
+    $(".highlighted-spell").removeClass('highlighted-spell');
+    $(".highlighted-classtab").removeClass('highlighted-classtab');
+
     if (search == "") {
-        highlight();
         return;
     }
 
@@ -129,17 +134,11 @@ function onSearch(e) {
             highlightedIds.push(k);
         }
     });
-    highlight();
-}
-
-function highlight() {
-    $(".highlighted-spell").removeClass('highlighted-spell');
-    $(".highlighted-classtab").removeClass('highlighted-classtab');
 
     $('[data-ascension-tooltip-id]').each(function() {
         var id = $(this).attr('data-ascension-tooltip-id');
         if (highlightedIds.indexOf(id) != -1) {
-            $(this).parent().addClass('highlighted-spell');
+            $(this).parent().parent().parent().parent().addClass('highlighted-spell');
         }
     });
 
