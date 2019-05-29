@@ -13,9 +13,14 @@
 // ==/UserScript==
 
 GM_addStyle(`
-#search-text {
+#wcs-search-text {
   border: 0;
   background-color: inherit;
+}
+
+#wcs-delete-cache {
+  vertical-align: middle;
+  display: inline-grid;
 }
 
 .highlighted-spell {
@@ -36,7 +41,22 @@ GM_addStyle(`
 var plguinHtml = `
 <li id="search-plugin" class="atc-apptabs-container-content-wrapper-apptab atc-apptabs-container-content-wrapper-apptab-right">
   <div class="atc-apptabs-container-content-wrapper-apptab-content-wrapper">
-    <input id="search-text" type="text"></input>
+    <input id="wcs-search-text" type="text"></input>
+    <span id="wcs-delete-cache" title="Clear Cache">
+      <svg title="Clear Cache" width="20" height="20" viewBox="0 0 48 48" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <g>
+          <rect fill="none" id="canvas_background" height="402" width="582" y="-1" x="-1"/>
+        </g>
+        <g>
+          <path fill="#ffd800" id="svg_3" d="m41,48l-34,0l0,-41l34,0l0,41zm-32,-2l30,0l0,-37l-30,0l0,37z"/>
+          <path fill="#ffd800" id="svg_5" d="m35,9l-22,0l0,-8l22,0l0,8zm-20,-2l18,0l0,-4l-18,0l0,4z"/>
+          <path fill="#ffd800" id="svg_7" d="m16,41c-0.553,0 -1,-0.447 -1,-1l0,-25c0,-0.553 0.447,-1 1,-1s1,0.447 1,1l0,25c0,0.553 -0.447,1 -1,1z"/>
+          <path fill="#ffd800" id="svg_9" d="m24,41c-0.553,0 -1,-0.447 -1,-1l0,-25c0,-0.553 0.447,-1 1,-1s1,0.447 1,1l0,25c0,0.553 -0.447,1 -1,1z"/>
+          <path fill="#ffd800" id="svg_11" d="m32,41c-0.553,0 -1,-0.447 -1,-1l0,-25c0,-0.553 0.447,-1 1,-1s1,0.447 1,1l0,25c0,0.553 -0.447,1 -1,1z"/>
+          <rect fill="#ffd800" x="0.067491" id="svg_13" y="6.932509" width="48" height="2"/>
+        </g>
+      </svg>
+    </span>
   </div>
 </li>
 `;
@@ -48,7 +68,7 @@ function saveCache() { GM_setValue("cache", cache); }
 function getSpellInfo(id) {
     if (cache[id] === undefined) {
         cache[id] = {
-            index: $('.atc-editor-classtabbar-classtab-active').index(),
+            index: getCurrentClassIndex(),
             info: getTooltipInfo(id)
         }
     }
@@ -69,9 +89,20 @@ function getTooltipInfo(id) {
 
 function main() {
     loadCache();
+
     $('.atc-apptabs-container-content-wrapper').append(plguinHtml);
-    $('#search-text').on('input', onSearch);
+    $('#wcs-search-text').on('input', onSearch);
     $('.atc-editor-classtabbar-content-wrapper').on('click', function() { setTimeout(update, 100); });
+    $('.atc-editor-classtabbarcontent-content-wrapper-talenttree-table-talent-container-content-wrapper-talent-images').on('click', function() { setTimeout(update, 100); });
+    $('.atc-editor-classtabbarcontent-content-wrapper-talenttree-table-talent-container-content-wrapper-talent-images').on('contextmenu', function() { setTimeout(update, 100); });
+    $('#wcs-delete-cache').on('click', function() {
+        if (confirm('Are you sure to delete the cache?')) {
+            cache = {};
+            saveCache();
+            update();
+        }
+    });
+
     update();
 }
 
@@ -108,22 +139,23 @@ function highlight() {
     $('[data-ascension-tooltip-id]').each(function() {
         var id = $(this).attr('data-ascension-tooltip-id');
         if (highlightedIds.indexOf(id) != -1) {
-            $(this).addClass('highlighted-spell');
+            $(this).parent().addClass('highlighted-spell');
         }
     });
 
     $.each(highlightedIndexes, function(i, v) {
-        console.log(v);
         $('.atc-editor-classtabbar-content-wrapper').children().eq(v).children('img').addClass('highlighted-classtab');
     });
 }
 
+function getCurrentClassIndex() {
+    return $('.atc-editor-classtabbar-classtab-active').index();
+}
+
 function update() {
-    $('.atc-editor-classtabbarcontent-container > .atc-editor-classtabbarcontent-content-wrapper-talenttree-table > tbody').each(function() {
-        $(this).find('tr > td > div > div > div > div > div').each(function() {
-            var tooltipId = $(this).attr('data-ascension-tooltip-id');
-            getSpellInfo(tooltipId);
-        });
+    $('[data-ascension-tooltip-id]').each(function() {
+        var id = $(this).attr('data-ascension-tooltip-id');
+        getSpellInfo(id);
     });
     saveCache();
     highlight();
