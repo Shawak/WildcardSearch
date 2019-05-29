@@ -48,7 +48,7 @@ function saveCache() { GM_setValue("cache", cache); }
 function getSpellInfo(id) {
     if (cache[id] === undefined) {
         cache[id] = {
-            index: getCurrentClassIndex(),
+            index: $('.atc-editor-classtabbar-classtab-active').index(),
             info: getTooltipInfo(id)
         }
     }
@@ -116,10 +116,6 @@ function highlight() {
         console.log(v);
         $('.atc-editor-classtabbar-content-wrapper').children().eq(v).children('img').addClass('highlighted-classtab');
     });
-}
-
-function getCurrentClassIndex() {
-    return $('.atc-editor-classtabbar-classtab-active').index();
 }
 
 function update() {
