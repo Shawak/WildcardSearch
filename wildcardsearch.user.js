@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WildcardSearch
 // @namespace    WildcardSearch
-// @version      0.0.3
+// @version      0.0.4
 // @description  Search plugin for the project ascension talent builder
 // @author       Shawak
 // @match        *://project-ascension.com/development/builds
@@ -114,7 +114,7 @@ function main() {
 var search = "";
 
 function onSearch(e) {
-    search = $(this).val().toLowerCase();
+    search = $(this).val().toLowerCase().trim();
     highlight();
 }
 
