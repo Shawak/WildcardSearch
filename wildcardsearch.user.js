@@ -5,8 +5,8 @@
 // @description  Search plugin for the project ascension talent builder
 // @author       Shawak
 // @match        *://project-ascension.com/development/builds
-// @downloadURL  https://raw.githubusercontent.com/Shawak/WildcardSearch/master/wildcardsearch.user.js
-// @updateURL    https://raw.githubusercontent.com/Shawak/WildcardSearch/master/wildcardsearch.user.js
+// @downloadURL  https://github.com/Shawak/WildcardSearch/wildcardsearch.user.js
+// @updateURL    https://github.com/Shawak/WildcardSearch/wildcardsearch.user.js
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_addStyle
