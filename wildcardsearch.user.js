@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         WildcardSearch
 // @namespace    WildcardSearch
-// @version      0.0.4
+// @version      0.0.5
 // @description  Search plugin for the project ascension talent builder
 // @author       Shawak
 // @match        *://project-ascension.com/development/builds
-// @downloadURL  https://github.com/Shawak/WildcardSearch/wildcardsearch.user.js
-// @updateURL    https://github.com/Shawak/WildcardSearch/wildcardsearch.user.js
+// @downloadURL  https://raw.githubusercontent.com/Shawak/WildcardSearch/master/wildcardsearch.user.js
+// @updateURL    https://raw.githubusercontent.com/Shawak/WildcardSearch/master/wildcardsearch.user.js
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_addStyle
@@ -57,8 +57,7 @@ var plguinHtml = `
       </svg>
     </span>
   </div>
-</li>
-`;
+</li>`;
 
 String.prototype.stripHtml = function () {
     var div = document.createElement("div");
@@ -66,8 +65,10 @@ String.prototype.stripHtml = function () {
     return div.textContent || div.innerText || "";
 };
 
-var cache = {};
-function loadCache() { cache = GM_getValue("cache", {}); }
+var cache,
+    search = "";
+
+function loadCache() { cache = GM_getValue("cache", getGitHubCache()); }
 function saveCache() { GM_setValue("cache", cache); }
 
 function getSpellInfo(id) {
@@ -78,6 +79,18 @@ function getSpellInfo(id) {
         }
     }
     return cache[id].info;
+}
+
+function getGitHubCache() {
+    var result = {};
+    $.ajax({
+        url: 'https://raw.githubusercontent.com/Shawak/WildcardSearch/master/cache.json',
+        success: function(json) {
+            result = JSON.parse(json);
+        },
+        async: false
+    });
+    return result;
 }
 
 function getTooltipInfo(id) {
@@ -110,8 +123,6 @@ function main() {
 
     update();
 }
-
-var search = "";
 
 function onSearch(e) {
     search = $(this).val().toLowerCase().trim();
