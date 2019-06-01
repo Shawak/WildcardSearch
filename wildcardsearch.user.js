@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WildcardSearch
 // @namespace    WildcardSearch
-// @version      0.0.7
+// @version      0.0.8
 // @description  Search plugin for the project ascension talent builder
 // @author       Shawak
 // @match        *://project-ascension.com/development/builds
@@ -37,7 +37,17 @@ GM_addStyle(`
 }
 `);
 
-var plguinHtml = `
+String.prototype.stripHtml = function () {
+    var div = document.createElement("div");
+    div.innerHTML = this;
+    return div.textContent || div.innerText || "";
+};
+
+(function($) {
+
+    var wcs = {
+
+        plguinHtml: `
 <li id="search-plugin" class="atc-apptabs-container-content-wrapper-apptab atc-apptabs-container-content-wrapper-apptab-right">
   <div class="atc-apptabs-container-content-wrapper-apptab-content-wrapper">
     <input id="wcs-search-text" type="text"></input>
@@ -57,124 +67,120 @@ var plguinHtml = `
       </svg>
     </span>
   </div>
-</li>`;
+</li>`,
 
-String.prototype.stripHtml = function () {
-    var div = document.createElement("div");
-    div.innerHTML = this;
-    return div.textContent || div.innerText || "";
-};
+        cache: null,
+        search: "",
 
-var cache,
-    search = "";
+        loadCache: function() { this.cache = GM_getValue("cache", wcs.getGitHubCache()); },
+        saveCache: function() { GM_setValue("cache", wcs.cache); },
 
-function loadCache() { cache = GM_getValue("cache", getGitHubCache()); }
-function saveCache() { GM_setValue("cache", cache); }
+        init: function() {
+            wcs.loadCache();
 
-function getSpellInfo(id) {
-    if (cache[id] === undefined) {
-        cache[id] = {
-            index: getCurrentClassIndex(),
-            info: getTooltipInfo(id)
-        }
-    }
-    return cache[id].info;
-}
+            $('.atc-apptabs-container-content-wrapper').append(wcs.plguinHtml);
+            $('#wcs-search-text').on('input', wcs.onSearch);
+            $('.atc-editor-classtabbar-content-wrapper').on('click', function() { setTimeout(wcs.update, 100); });
+            $('.atc-editor-classtabbarcontent-content-wrapper-talenttree-table-talent-container-content-wrapper-talent-images').on('click', function() { setTimeout(wcs.update, 100); });
+            $('.atc-editor-classtabbarcontent-content-wrapper-talenttree-table-talent-container-content-wrapper-talent-images').on('contextmenu', function() { setTimeout(wcs.update, 100); });
+            $('#wcs-delete-cache').on('click', function() {
+                if (confirm('Are you sure to delete the cache?')) {
+                    wcs.cache = {};
+                    wcs.saveCache();
+                    wcs.update();
+                }
+            });
 
-function getGitHubCache() {
-    var result = {};
-    $.ajax({
-        url: 'https://raw.githubusercontent.com/Shawak/WildcardSearch/master/cache.json',
-        success: function(json) {
-            result = JSON.parse(json);
+            wcs.update();
         },
-        async: false
-    });
-    return result;
-}
 
-function getTooltipInfo(id) {
-    var result = null;
-    $.ajax({
-        url: 'https://data.project-ascension.com/api/spells/' + id,
-        success: function(json) {
-            result = json;
-        },
-        async: false
-    });
-    return result;
-}
-
-function main() {
-    loadCache();
-
-    $('.atc-apptabs-container-content-wrapper').append(plguinHtml);
-    $('#wcs-search-text').on('input', onSearch);
-    $('.atc-editor-classtabbar-content-wrapper').on('click', function() { setTimeout(update, 100); });
-    $('.atc-editor-classtabbarcontent-content-wrapper-talenttree-table-talent-container-content-wrapper-talent-images').on('click', function() { setTimeout(update, 100); });
-    $('.atc-editor-classtabbarcontent-content-wrapper-talenttree-table-talent-container-content-wrapper-talent-images').on('contextmenu', function() { setTimeout(update, 100); });
-    $('#wcs-delete-cache').on('click', function() {
-        if (confirm('Are you sure to delete the cache?')) {
-            cache = {};
-            saveCache();
-            update();
-        }
-    });
-
-    update();
-}
-
-function onSearch(e) {
-    search = $(this).val().toLowerCase().trim();
-    highlight();
-}
-
-function highlight() {
-    $(".highlighted-spell").removeClass('highlighted-spell');
-    $(".highlighted-classtab").removeClass('highlighted-classtab');
-
-    if (search == "") {
-        return;
-    }
-
-    var highlightedIds = [];
-    var highlightedIndexes = [];
-    $.each(cache, function(k, v) {
-        if (v.info.name.stripHtml().toLowerCase().includes(search)
-            || v.info.tooltip.text.stripHtml().toLowerCase().includes(search))
-        {
-            if (!highlightedIndexes.includes(v.index)) {
-                highlightedIndexes.push(v.index);
+        getSpellInfo: function(id) {
+            if (wcs.cache[id] === undefined) {
+                wcs.cache[id] = {
+                    index: wcs.getCurrentClassIndex(),
+                    info: wcs.getTooltipInfo(id)
+                }
             }
-            highlightedIds.push(k);
+            return wcs.cache[id].info;
+        },
+
+        getGitHubCache: function() {
+            var result = {};
+            $.ajax({
+                url: 'https://raw.githubusercontent.com/Shawak/WildcardSearch/master/cache.json',
+                success: function(json) {
+                    result = JSON.parse(json);
+                },
+                async: false
+            });
+            return result;
+        },
+
+        getTooltipInfo: function(id) {
+            var result = null;
+            $.ajax({
+                url: 'https://data.project-ascension.com/api/spells/' + id,
+                success: function(json) {
+                    result = json;
+                },
+                async: false
+            });
+            return result;
+        },
+
+        getCurrentClassIndex: function() {
+            return $('.atc-editor-classtabbar-classtab-active').index();
+        },
+
+        onSearch: function(e) {
+            wcs.search = $(this).val().toLowerCase().trim();
+            wcs.highlight();
+        },
+
+        highlight: function() {
+            $(".highlighted-spell").removeClass('highlighted-spell');
+            $(".highlighted-classtab").removeClass('highlighted-classtab');
+
+            if (wcs.search == "") {
+                return;
+            }
+
+            var highlightedIds = [];
+            var highlightedIndexes = [];
+            $.each(wcs.cache, function(k, v) {
+                if (v.info.name.stripHtml().toLowerCase().includes(wcs.search)
+                    || v.info.tooltip.text.stripHtml().toLowerCase().includes(wcs.search))
+                {
+                    if (!highlightedIndexes.includes(v.index)) {
+                        highlightedIndexes.push(v.index);
+                    }
+                    highlightedIds.push(k);
+                }
+            });
+
+            $('[data-ascension-tooltip-id]').each(function() {
+                var id = $(this).attr('data-ascension-tooltip-id');
+                if (highlightedIds.indexOf(id) != -1) {
+                    $(this).parent().parent().parent().parent().addClass('highlighted-spell');
+                }
+            });
+
+            $.each(highlightedIndexes, function(i, v) {
+                $('.atc-editor-classtabbar-content-wrapper').children().eq(v).children('img').addClass('highlighted-classtab');
+            });
+        },
+
+        update: function() {
+            $('[data-ascension-tooltip-id]').each(function() {
+                var id = $(this).attr('data-ascension-tooltip-id');
+                wcs.getSpellInfo(id);
+            });
+            wcs.saveCache();
+            wcs.highlight();
         }
-    });
 
-    $('[data-ascension-tooltip-id]').each(function() {
-        var id = $(this).attr('data-ascension-tooltip-id');
-        if (highlightedIds.indexOf(id) != -1) {
-            $(this).parent().parent().parent().parent().addClass('highlighted-spell');
-        }
-    });
+    };
 
-    $.each(highlightedIndexes, function(i, v) {
-        $('.atc-editor-classtabbar-content-wrapper').children().eq(v).children('img').addClass('highlighted-classtab');
-    });
-}
+    setTimeout(wcs.init, 500);
 
-function getCurrentClassIndex() {
-    return $('.atc-editor-classtabbar-classtab-active').index();
-}
-
-function update() {
-    $('[data-ascension-tooltip-id]').each(function() {
-        var id = $(this).attr('data-ascension-tooltip-id');
-        getSpellInfo(id);
-    });
-    saveCache();
-    highlight();
-}
-
-(function() {
-    setTimeout(main, 500);
-})();
+})(jQuery);
