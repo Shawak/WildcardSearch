@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WildcardSearch
 // @namespace    WildcardSearch
-// @version      0.0.8
+// @version      0.1.0
 // @description  Search plugin for the project ascension talent builder
 // @author       Shawak
 // @match        *://project-ascension.com/development/builds
@@ -11,6 +11,17 @@
 // @grant        GM_setValue
 // @grant        GM_addStyle
 // ==/UserScript==
+
+if (typeof GM_addStyle === 'undefined') {
+  GM_addStyle = function(css) {
+    let head = document.getElementsByTagName('head')[0], style = document.createElement('style');
+    if (!head) {return}
+    style.type = 'text/css';
+    try {style.innerHTML = css}
+    catch(x) {style.innerText = css}
+    head.appendChild(style);
+  };
+}
 
 GM_addStyle(`
 #wcs-search-text {
