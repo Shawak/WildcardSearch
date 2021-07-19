@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         WildcardSearch
 // @namespace    WildcardSearch
-// @version      0.1.0
+// @version      0.2.0
 // @description  Search plugin for the project ascension talent builder
 // @author       Shawak
-// @match        *://project-ascension.com/development/builds
+// @match        *://data.ascension.gg/talentcalculator#/talentsandabilities/editor
 // @downloadURL  https://github.com/Shawak/WildcardSearch/raw/master/wildcardsearch.user.js
 // @updateURL    https://github.com/Shawak/WildcardSearch/raw/master/wildcardsearch.user.js
 // @grant        GM_getValue
